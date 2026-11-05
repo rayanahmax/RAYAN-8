@@ -106,3 +106,54 @@ Hexadecimal representation:
 
 This instruction loads the immediate value 15 into register R0.
 
+
+
+
+
+### 7. Register Organization
+
+RAYAN-8 contains four general-purpose registers, each 8 bits wide.
+
+| Register | Size   |       Description        |
+|----------|--------|--------------------------|
+| R0       | 8 bits | General-purpose register |
+| R1       | 8 bits | General-purpose register |
+| R2       | 8 bits | General-purpose register |
+| R3       | 8 bits | General-purpose register |
+
+#### Special-Purpose Registers
+
+| Register | Size   |       Purpose                       |
+|----------|--------|-------------------------------------|
+| PC       | 8 bits | Stores the next instruction address |
+| IR       | 16 bits| Holds the current instruction       |
+| Z        | 1 bit  | Zero status flag                    |
+| C        | 1 bit  | Carry status flag                   |
+
+### 8. Memory Organization
+
+RAYAN-8 uses separate instruction and data memories.
+
+#### Instruction Memory
+
+- Capacity: 256 × 16 bits.
+- Address width: 8 bits.
+- Address range: 0–255.
+- Stores machine instructions.
+- Read-only during normal CPU execution.
+
+#### Data Memory
+
+- Capacity: 256 × 8 bits.
+- Address width: 8 bits.
+- Address range: 0–255.
+- Stores program data.
+- Supports read and write operations.
+
+### 9. Storage Architecture
+
+The CPU uses four general-purpose registers for temporary data storage. Special-purpose registers manage instruction execution and processor status.
+
+Instruction memory stores the program, while data memory stores values accessed by the program.
+
+The instruction and data memories are separate, allowing the processor to use distinct storage paths for instructions and data.
