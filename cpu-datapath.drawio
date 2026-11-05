@@ -1,0 +1,70 @@
+<mxfile host="app.diagrams.net" modified="2026-11-05T00:00:00Z" agent="QwenWork" version="32.6.10" type="device">
+  <diagram id="cpu-datapath" name="Page-1">
+    <mxGraphModel dx="1800" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1900" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="pc" parent="1" vertex="1" value="Program Counter&lt;br&gt;&lt;span style=&quot;font-size:11px;font-weight:normal;&quot;&gt;PC · 8-bit&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;verticalAlign=middle;align=center;fontSize=13;spacing=4;strokeWidth=2;fillColor=#dae8fc;strokeColor=#6c8ebf;">
+          <mxGeometry x="80" y="100" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="imem" parent="1" vertex="1" value="Instruction Memory&lt;br&gt;&lt;span style=&quot;font-size:11px;font-weight:normal;&quot;&gt;256 × 16&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;verticalAlign=middle;align=center;fontSize=13;spacing=4;strokeWidth=2;fillColor=#ffe6cc;strokeColor=#d79b00;">
+          <mxGeometry x="380" y="100" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ir" parent="1" vertex="1" value="Instruction Register&lt;br&gt;&lt;span style=&quot;font-size:11px;font-weight:normal;&quot;&gt;IR · 16-bit&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;verticalAlign=middle;align=center;fontSize=13;spacing=4;strokeWidth=2;fillColor=#dae8fc;strokeColor=#6c8ebf;">
+          <mxGeometry x="700" y="100" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="cu" parent="1" vertex="1" value="Control Unit&lt;br&gt;&lt;span style=&quot;font-size:11px;font-weight:normal;&quot;&gt;Instruction decoder + FSM&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;verticalAlign=middle;align=center;fontSize=13;spacing=4;strokeWidth=2;fillColor=#fff2cc;strokeColor=#d6b656;">
+          <mxGeometry x="1020" y="100" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="rfile" parent="1" vertex="1" value="Register File&lt;br&gt;&lt;span style=&quot;font-size:11px;font-weight:normal;&quot;&gt;R0–R3 · 8-bit&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;verticalAlign=middle;align=center;fontSize=13;spacing=4;strokeWidth=2;fillColor=#dae8fc;strokeColor=#6c8ebf;">
+          <mxGeometry x="700" y="320" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="alu" parent="1" vertex="1" value="ALU&lt;br&gt;&lt;span style=&quot;font-size:11px;font-weight:normal;&quot;&gt;8-bit arithmetic/logic&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;verticalAlign=middle;align=center;fontSize=13;spacing=4;strokeWidth=2;fillColor=#d5e8d4;strokeColor=#82b366;">
+          <mxGeometry x="1020" y="320" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="flag" parent="1" vertex="1" value="Flag Register&lt;br&gt;&lt;span style=&quot;font-size:11px;font-weight:normal;&quot;&gt;Z and C&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;verticalAlign=middle;align=center;fontSize=13;spacing=4;strokeWidth=2;fillColor=#dae8fc;strokeColor=#6c8ebf;">
+          <mxGeometry x="1370" y="320" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="dmem" parent="1" vertex="1" value="Data Memory&lt;br&gt;&lt;span style=&quot;font-size:11px;font-weight:normal;&quot;&gt;256 × 8&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;fontStyle=1;verticalAlign=middle;align=center;fontSize=13;spacing=4;strokeWidth=2;fillColor=#ffe6cc;strokeColor=#d79b00;">
+          <mxGeometry x="1680" y="320" width="170" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" parent="1" edge="1" source="pc" target="imem" value="Address" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4d4d4d;strokeWidth=2;fontSize=12;fontStyle=0;fontColor=#222222;labelBackgroundColor=#ffffff;endArrow=classic;endFill=1;labelPosition=center;align=center;verticalLabelPosition=bottom;verticalAlign=bottom;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" parent="1" edge="1" source="imem" target="ir" value="16-bit instruction" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4d4d4d;strokeWidth=2;fontSize=12;fontStyle=0;fontColor=#222222;labelBackgroundColor=#ffffff;endArrow=classic;endFill=1;labelPosition=center;align=center;verticalLabelPosition=bottom;verticalAlign=bottom;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" parent="1" edge="1" source="ir" target="cu" value="Opcode and operands" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4d4d4d;strokeWidth=2;fontSize=12;fontStyle=0;fontColor=#222222;labelBackgroundColor=#ffffff;endArrow=classic;endFill=1;labelPosition=center;align=center;verticalLabelPosition=bottom;verticalAlign=bottom;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" parent="1" edge="1" source="cu" target="pc" value="PC control" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4d4d4d;strokeWidth=2;fontSize=12;fontStyle=0;fontColor=#222222;labelBackgroundColor=#ffffff;endArrow=classic;endFill=1;labelPosition=center;align=center;verticalLabelPosition=top;verticalAlign=top;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" parent="1" edge="1" source="cu" target="rfile" value="Read/write control" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4d4d4d;strokeWidth=2;fontSize=12;fontStyle=0;fontColor=#222222;labelBackgroundColor=#ffffff;endArrow=classic;endFill=1;labelPosition=center;align=center;verticalLabelPosition=top;verticalAlign=top;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.35;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" parent="1" edge="1" source="rfile" target="alu" value="Register values" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4d4d4d;strokeWidth=2;fontSize=12;fontStyle=0;fontColor=#222222;labelBackgroundColor=#ffffff;endArrow=classic;endFill=1;labelPosition=center;align=center;verticalLabelPosition=bottom;verticalAlign=bottom;exitX=1;exitY=0.35;exitDx=0;exitDy=0;entryX=0;entryY=0.35;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" parent="1" edge="1" source="alu" target="rfile" value="Result" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4d4d4d;strokeWidth=2;fontSize=12;fontStyle=0;fontColor=#222222;labelBackgroundColor=#ffffff;endArrow=classic;endFill=1;labelPosition=center;align=center;verticalLabelPosition=bottom;verticalAlign=bottom;exitX=0;exitY=0.65;exitDx=0;exitDy=0;entryX=1;entryY=0.65;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" parent="1" edge="1" source="alu" target="flag" value="Z, C" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4d4d4d;strokeWidth=2;fontSize=12;fontStyle=0;fontColor=#222222;labelBackgroundColor=#ffffff;endArrow=classic;endFill=1;labelPosition=center;align=center;verticalLabelPosition=bottom;verticalAlign=bottom;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e9" parent="1" edge="1" source="rfile" target="dmem" value="Write data" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4d4d4d;strokeWidth=2;fontSize=12;fontStyle=0;fontColor=#222222;labelBackgroundColor=#ffffff;endArrow=classic;endFill=1;labelPosition=center;align=center;verticalLabelPosition=top;verticalAlign=top;exitX=0.35;exitY=1;exitDx=0;exitDy=0;entryX=0.35;entryY=1;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" parent="1" edge="1" source="dmem" target="rfile" value="Read data" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4d4d4d;strokeWidth=2;fontSize=12;fontStyle=0;fontColor=#222222;labelBackgroundColor=#ffffff;endArrow=classic;endFill=1;labelPosition=center;align=center;verticalLabelPosition=top;verticalAlign=top;exitX=0.7;exitY=0;exitDx=0;exitDy=0;entryX=0.7;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" parent="1" edge="1" source="cu" target="dmem" value="Read/write control" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4d4d4d;strokeWidth=2;fontSize=12;fontStyle=0;fontColor=#222222;labelBackgroundColor=#ffffff;endArrow=classic;endFill=1;labelPosition=center;align=center;verticalLabelPosition=top;verticalAlign=top;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" parent="1" edge="1" source="alu" target="pc" value="Branch target" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#b85450;strokeWidth=2;dashed=1;fontSize=12;fontStyle=0;fontColor=#222222;labelBackgroundColor=#ffffff;endArrow=classic;endFill=1;labelPosition=center;align=center;verticalLabelPosition=bottom;verticalAlign=bottom;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.25;entryY=1;entryDx=0;entryDy=0;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
