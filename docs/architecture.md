@@ -15,7 +15,7 @@ programs into machine code that the processor executes.
 - Simulate and test the processor.
 
 ### 3. Initial Architecture Specifications
-Status: Architecture specification v0.2
+Status: Architecture specification v1.0
 
 - Data width: 8 bits
 - Instruction width: 16 bits
@@ -157,3 +157,30 @@ The CPU uses four general-purpose registers for temporary data storage. Special-
 Instruction memory stores the program, while data memory stores values accessed by the program.
 
 The instruction and data memories are separate, allowing the processor to use distinct storage paths for instructions and data.
+
+### 10. Memory Access Timing
+
+RAYAN-8 uses the following memory access behavior.
+
+#### Instruction Memory
+
+- Instruction memory has 256 locations, each 16 bits wide.
+- It is read during the Fetch state.
+- The instruction at the current PC is loaded into the Instruction Register (IR).
+- Instruction memory is read-only during CPU execution.
+
+#### Data Memory
+
+- Data memory contains 256 locations, each 8 bits wide.
+- Read operations use combinational memory access.
+- Write operations occur synchronously on the active clock edge when MemWrite is enabled.
+- MemRead controls whether the memory read value is selected for the CPU's write-back path.
+- LOAD reads data from memory and writes it into the destination register.
+- STORE writes the selected register value into the specified memory address.
+
+#### Memory Control Signals
+
+- MemRead: Enables a data memory read operation.
+- MemWrite: Enables a data memory write operation.
+
+The CPU control unit generates these signals during the appropriate execution states.
