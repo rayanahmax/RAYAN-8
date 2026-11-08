@@ -17,10 +17,19 @@ all: sim asm
 build:
 	@mkdir -p build
 
-# Compile all RTL + testbench files, then run the simulation.
-sim: build $(RTL) $(TB)
-	$(IVERILOG) -o build/sim.vvp $(RTL) $(TB)
-	$(VVP) build/sim.vvp
+# Compile and run each testbench separately, together with all RTL.
+# Each *_tb.v is built into its own simulator binary so one $finish
+# does not stop the others.
+sim: build $(RTL)
+	@status=0; \
+	for t in tb/*_tb.v; do \
+		name=`basename $$t .v`; \
+		echo "=== $$name ==="; \
+		$(IVERILOG) -o build/$$name.vvp $(RTL) $$t \
+			&& $(VVP) build/$$name.vvp \
+			|| status=1; \
+	done; \
+	exit $$status
 
 # Build the C++ assembler.
 asm: build $(ASM_SRC)

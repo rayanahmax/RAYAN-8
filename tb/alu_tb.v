@@ -29,6 +29,9 @@ module alu_tb;
     endtask
 
     initial begin
+        $dumpfile("build/alu.vcd");
+        $dumpvars(0, alu_tb);
+
         // ADD  (op = 0)
         op = 3'd0;
         a = 8'd20;  b = 8'd22;  #1; check(8'd44 - 2, 1'b0, 1'b0, "ADD 20+22=42");
