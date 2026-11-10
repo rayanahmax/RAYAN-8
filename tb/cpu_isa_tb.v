@@ -14,6 +14,7 @@ module cpu_isa_tb;
     cpu #(.INIT_FILE("tests/programs/jmp.hex"))   dut_jmp  (.clk(clk), .reset(reset));
     cpu #(.INIT_FILE("tests/programs/jz.hex"))    dut_jz   (.clk(clk), .reset(reset));
     cpu #(.INIT_FILE("tests/programs/jc.hex"))    dut_jc   (.clk(clk), .reset(reset));
+    cpu #(.INIT_FILE("tests/programs/jz_notaken.hex")) dut_jznt (.clk(clk), .reset(reset));
 
     always #5 clk = ~clk;
 
@@ -51,7 +52,7 @@ module cpu_isa_tb;
 
         for (i = 0; i < 150 &&
              !(dut_arith.halt && dut_logic.halt && dut_mov.halt &&
-               dut_jmp.halt && dut_jz.halt && dut_jc.halt); i = i + 1)
+               dut_jmp.halt && dut_jz.halt && dut_jc.halt && dut_jznt.halt); i = i + 1)
             @(posedge clk);
         #1;
 
@@ -87,6 +88,11 @@ module cpu_isa_tb;
         check8(dut_jc.u_rf.regs[0], 8'd254, "jc R0 = 254");
         check8(dut_jc.u_rf.regs[2], 8'd0,   "jc R2 = 0 (skipped 99)");
         check8(dut_jc.u_rf.regs[3], 8'd8,   "jc R3 = 8");
+
+        // JZ not taken: SUB 5-3 leaves Z=0, so the fall-through LDI R2,1 executes
+        checkhalt(dut_jznt.halt, "jz not-taken halted");
+        check8(dut_jznt.u_rf.regs[0], 8'd2, "jznt R0 = 2");
+        check8(dut_jznt.u_rf.regs[2], 8'd1, "jznt R2 = 1 (fell through)");
 
         if (errors == 0)
             $display("ALL %0d ISA CHECKS PASSED", checks);
