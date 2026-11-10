@@ -90,8 +90,8 @@ module control_unit (
         pc_en      = 1'b0;
         nextpc_sel = 1'b0;
         rf_wen     = 1'b0;
-        alu_op     = A_ADD;
-        bsel       = 1'b0;
+        alu_op     = alu_decode(opcode);
+        bsel       = (opcode == OP_LDI);
         wb_sel     = 1'b0;
         memwrite   = 1'b0;
         flag_en    = 1'b0;
@@ -106,8 +106,6 @@ module control_unit (
                 // register reads are combinational; nothing to assert
             end
             S_EXEC: begin
-                alu_op  = alu_decode(opcode);
-                bsel    = (opcode == OP_LDI);
                 flag_en = is_alu || is_pass;
             end
             S_MEM: begin

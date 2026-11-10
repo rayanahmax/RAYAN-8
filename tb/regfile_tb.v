@@ -3,6 +3,7 @@
 `timescale 1ns/1ps
 module regfile_tb;
     reg        clk = 0;
+    reg        reset;
     reg        wen;
     reg [1:0]  raddr_a, raddr_b, waddr;
     reg [7:0]  wdata;
@@ -12,7 +13,7 @@ module regfile_tb;
     integer checks = 0;
 
     regfile dut (
-        .clk(clk), .wen(wen),
+        .clk(clk), .reset(reset), .wen(wen),
         .raddr_a(raddr_a), .raddr_b(raddr_b),
         .waddr(waddr), .wdata(wdata),
         .rdata_a(rdata_a), .rdata_b(rdata_b)
@@ -47,7 +48,10 @@ module regfile_tb;
         $dumpvars(0, regfile_tb);
 
         wen = 0; raddr_a = 0; raddr_b = 0; waddr = 0; wdata = 0;
-        #12;
+        reset = 1;
+        @(negedge clk); @(negedge clk);
+        reset = 0;
+        raddr_a = 2'd0; #1; check8(rdata_a, 8'd0, "reset clears R0");
 
         // Write all four registers.
         do_write(2'd0, 8'd10);
