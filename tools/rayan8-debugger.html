@@ -5,342 +5,219 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RAYAN-8 CPU Debugger</title>
 <style>
-  :root { --bg:#f7f8fa; --panel:#fff; --ink:#1c1f24; --muted:#6b7280; --line:#d7dbe0;
-          --blue:#dae8fc; --green:#d5e8d4; --orange:#ffe6cc; --purple:#e1d5e7; --accent:#2563eb; }
-  * { box-sizing: border-box; }
-  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-         background:var(--bg); color:var(--ink); font-size:14px; }
-  header { padding:14px 20px; border-bottom:1px solid var(--line); background:var(--panel); }
-  header h1 { margin:0; font-size:18px; }
-  header p { margin:2px 0 0; color:var(--muted); font-size:13px; }
-  .wrap { padding:16px; display:grid; gap:16px; grid-template-columns: 320px 1fr; }
-  .col { display:grid; gap:16px; align-content:start; }
-  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
-  .card h2 { margin:0 0 8px; font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
-  .controls { display:flex; flex-wrap:wrap; gap:6px; }
-  button, select { font:inherit; padding:6px 10px; border:1px solid var(--line); border-radius:7px;
-                   background:#fff; cursor:pointer; }
-  button:hover { background:#eef2ff; }
-  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
-  button:disabled { opacity:.45; cursor:default; }
-  table { width:100%; border-collapse:collapse; }
-  td { padding:3px 6px; font-variant-numeric: tabular-nums; }
-  .kv td:first-child { color:var(--muted); }
-  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-  .regs td, .flags td { font-family: ui-monospace, monospace; }
-  .flag { display:inline-block; min-width:26px; text-align:center; padding:2px 6px; border-radius:6px;
-          border:1px solid var(--line); margin-right:6px; }
-  .flag.set { background:var(--green); border-color:#82b366; font-weight:700; }
-  .disasm { max-height:340px; overflow:auto; }
-  .disasm .row { display:grid; grid-template-columns: 46px 60px 1fr; padding:2px 6px; border-radius:5px; }
-  .disasm .row.cur { background:#fff3cd; outline:1px solid #e0b400; }
-  .disasm .addr { color:var(--muted); }
-  .ram { display:grid; grid-template-columns: repeat(16, 1fr); gap:2px; font-family:ui-monospace, monospace; }
-  .ram .cell { text-align:center; padding:2px 0; border:1px solid var(--line); border-radius:3px; font-size:11px; }
-  .ram .cell.nz { background:#eef2ff; }
-  .ram .cell.hl { background:#ffe08a; outline:1px solid #e0b400; }
-  .state-badge { padding:2px 8px; border-radius:6px; background:var(--orange); font-weight:700; }
-  svg .blk { stroke:#333; stroke-width:1.5; }
-  svg .active { stroke:var(--accent); stroke-width:3; }
-  svg text { font-family: system-ui, sans-serif; font-size:11px; }
-  .legend { color:var(--muted); font-size:12px; margin-top:6px; }
+  :root{
+    --bg:#f5f6f8; --card:#ffffff; --ink:#1a1d21; --muted:#667085; --line:#e3e6ea;
+    --accent:#3b5bdb; --accent-soft:#eef2ff;
+    --blue:#e7effb; --blue-b:#7f9cf5; --green:#e6f4ea; --green-b:#66bb6a;
+    --orange:#fdf1e0; --orange-b:#f0a840; --purple:#efeaf6; --purple-b:#9c7bd6;
+    --wire:#94a0b3;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .topbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 22px;background:var(--card);border-bottom:1px solid var(--line)}
+  .topbar h1{font-size:16px;margin:0;font-weight:700;letter-spacing:-.01em}
+  .topbar .sub{color:var(--muted);font-size:12px}
+  .spacer{flex:1}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  select,button{font:inherit;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);cursor:pointer}
+  select:hover,button:hover{border-color:#c8ccd4}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button:disabled{opacity:.4;cursor:default}
+  .grid{padding:18px 22px;display:grid;gap:16px;grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr)}
+  .stack{display:grid;gap:16px;align-content:start}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .card h2{margin:0 0 12px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-variant-numeric:tabular-nums}
+  .kv .k{color:var(--muted)}
+  .kv .v{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;text-align:right}
+  .badge{display:inline-block;padding:2px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent);font-weight:700;font-family:ui-monospace,monospace}
+  .flags{display:flex;gap:10px}
+  .flag{flex:1;text-align:center;padding:8px;border:1px solid var(--line);border-radius:9px;font-family:ui-monospace,monospace;font-weight:700}
+  .flag.set{background:var(--green);border-color:var(--green-b)}
+  .regs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .reg{display:flex;justify-content:space-between;align-items:baseline;padding:8px 10px;border:1px solid var(--line);border-radius:9px;font-family:ui-monospace,monospace}
+  .reg .name{color:var(--muted)}
+  .reg .dec{color:var(--muted);font-size:12px}
+  .disasm{max-height:280px;overflow:auto;font-family:ui-monospace,monospace;font-size:12.5px}
+  .disasm .row{display:grid;grid-template-columns:34px 62px 1fr;gap:8px;padding:3px 8px;border-radius:6px}
+  .disasm .row.cur{background:#fff6d6;box-shadow:inset 2px 0 0 #e0b400}
+  .disasm .a{color:var(--muted)}
+  .ram{display:grid;grid-template-columns:repeat(16,1fr);gap:3px;font-family:ui-monospace,monospace;font-size:10.5px}
+  .cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:4px;color:#b8bec8}
+  .cell.nz{background:var(--accent-soft);color:var(--accent);border-color:#cdd8fb;font-weight:700}
+  .cell.hl{background:#fff6d6;border-color:#e0b400;color:#7a5c00}
+  svg text{font:600 11px system-ui,sans-serif;fill:var(--ink)}
+  svg .node{stroke-width:1.5}
+  svg .node.active{stroke:var(--accent);stroke-width:2.5;filter:drop-shadow(0 0 3px rgba(59,91,219,.5))}
+  svg .lbl{font:600 9px system-ui,sans-serif;fill:var(--muted);stroke:none}
+  svg .wire{fill:none;stroke:var(--wire);stroke-width:1.6}
+  svg .wire.ctrl{stroke-dasharray:4 3;stroke:#c07a3a}
+  .hint{color:var(--muted);font-size:12px;margin-top:10px}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<header>
-  <h1>RAYAN-8 CPU Debugger</h1>
-  <p>Interactive multi-cycle datapath simulator. The JavaScript core mirrors rtl/cpu.v exactly.</p>
-</header>
-<div class="wrap">
-  <div class="col">
+<div class="topbar">
+  <div>
+    <h1>RAYAN-8 CPU Debugger</h1>
+    <div class="sub">Multi-cycle datapath simulator, mirroring rtl/cpu.v</div>
+  </div>
+  <div class="spacer"></div>
+  <div class="controls">
+    <select id="prog" aria-label="Program"></select>
+    <button id="btnReset">Reset</button>
+    <button id="btnStepC">Step cycle</button>
+    <button id="btnStepI">Step instr</button>
+    <button id="btnRun" class="primary">Run</button>
+    <button id="btnPause" disabled>Pause</button>
+  </div>
+</div>
+
+<div class="grid">
+  <div class="stack">
     <div class="card">
-      <h2>Program</h2>
-      <div class="controls" style="margin-bottom:8px">
-        <select id="prog"></select>
-      </div>
-      <div class="controls">
-        <button id="btnReset">Reset</button>
-        <button id="btnStepC">Step cycle</button>
-        <button id="btnStepI">Step instr</button>
-        <button id="btnRun" class="primary">Run</button>
-        <button id="btnPause" disabled>Pause</button>
-      </div>
-      <div class="legend">Step cycle = one clock (shows FSM states). Step instr = run until next FETCH.</div>
+      <h2>Datapath</h2>
+      <svg id="dp" viewBox="0 0 760 360" width="100%"></svg>
+      <div class="hint">Solid lines are the data path, dashed lines are control from the unit. Highlighted blocks are active this cycle.</div>
     </div>
     <div class="card">
-      <h2>CPU state</h2>
-      <table class="kv">
-        <tr><td>Cycle</td><td id="sCycle" class="mono">0</td></tr>
-        <tr><td>FSM state</td><td><span id="sState" class="state-badge">FETCH</span></td></tr>
-        <tr><td>PC (next fetch)</td><td id="sPC" class="mono">0x00</td></tr>
-        <tr><td>IR</td><td id="sIR" class="mono">0x0000</td></tr>
-        <tr><td>Decoded</td><td id="sDis" class="mono">-</td></tr>
-        <tr><td>Fields</td><td id="sFields" class="mono">-</td></tr>
-        <tr><td>ALU op</td><td id="sAlu" class="mono">-</td></tr>
-        <tr><td>Status</td><td id="sHalt" class="mono">running</td></tr>
-      </table>
+      <h2>Data memory</h2>
+      <div class="ram" id="ram"></div>
+    </div>
+  </div>
+
+  <div class="stack">
+    <div class="card">
+      <h2>State</h2>
+      <div class="kv">
+        <span class="k">Cycle</span><span class="v" id="sCycle">0</span>
+        <span class="k">FSM</span><span class="v"><span class="badge" id="sState">FETCH</span></span>
+        <span class="k">PC</span><span class="v" id="sPC">0x00</span>
+        <span class="k">IR</span><span class="v" id="sIR">0x0000</span>
+        <span class="k">Decoded</span><span class="v" id="sDis">-</span>
+        <span class="k">ALU op</span><span class="v" id="sAlu">-</span>
+        <span class="k">Status</span><span class="v" id="sHalt">running</span>
+      </div>
     </div>
     <div class="card">
       <h2>Flags</h2>
-      <span class="flag" id="fZ">Z</span><span class="flag" id="fC">C</span>
+      <div class="flags"><div class="flag" id="fZ">Z 0</div><div class="flag" id="fC">C 0</div></div>
     </div>
     <div class="card">
       <h2>Registers</h2>
-      <table class="regs"><tbody id="regs"></tbody></table>
-    </div>
-  </div>
-  <div class="col">
-    <div class="card">
-      <h2>Datapath</h2>
-      <svg id="dp" viewBox="0 0 640 210" width="100%" height="210"></svg>
+      <div class="regs" id="regs"></div>
     </div>
     <div class="card">
       <h2>Disassembly</h2>
       <div class="disasm" id="disasm"></div>
-    </div>
-    <div class="card">
-      <h2>Data memory (RAM[0..255])</h2>
-      <div class="ram" id="ram"></div>
     </div>
   </div>
 </div>
 
 <script>
 "use strict";
-// ---- ISA table (matches rtl/control_unit.v and asm/assembler.cpp) ----
-const OPCODES = {
-  0x0:{n:"LDI",k:"RI"}, 0x1:{n:"ADD",k:"RR"}, 0x2:{n:"SUB",k:"RR"}, 0x3:{n:"AND",k:"RR"},
-  0x4:{n:"OR",k:"RR"}, 0x5:{n:"XOR",k:"RR"}, 0x6:{n:"NOT",k:"RR"}, 0x7:{n:"MOV",k:"RR"},
-  0x8:{n:"LOAD",k:"RI"}, 0x9:{n:"STORE",k:"RI"}, 0xA:{n:"JMP",k:"ADDR"}, 0xB:{n:"JZ",k:"ADDR"},
-  0xC:{n:"JC",k:"ADDR"}, 0xD:{n:"HALT",k:"NOOP"}
+const OPCODES={0x0:{n:"LDI",k:"RI"},0x1:{n:"ADD",k:"RR"},0x2:{n:"SUB",k:"RR"},0x3:{n:"AND",k:"RR"},0x4:{n:"OR",k:"RR"},0x5:{n:"XOR",k:"RR"},0x6:{n:"NOT",k:"RR"},0x7:{n:"MOV",k:"RR"},0x8:{n:"LOAD",k:"RI"},0x9:{n:"STORE",k:"RI"},0xA:{n:"JMP",k:"ADDR"},0xB:{n:"JZ",k:"ADDR"},0xC:{n:"JC",k:"ADDR"},0xD:{n:"HALT",k:"NOOP"}};
+function fields(w){return{op:w>>12,rd:(w>>10)&3,rs:(w>>8)&3,imm:w&255};}
+function disasm(w){const d=OPCODES[w>>12];if(!d)return "DB 0x"+w.toString(16).toUpperCase().padStart(4,"0");const{rd,rs,imm}=fields(w);if(d.k==="NOOP")return d.n;if(d.k==="RR")return d.n+" R"+rd+", R"+rs;if(d.k==="RI")return d.n+" R"+rd+", "+imm;return d.n+" "+imm;}
+const PROGRAMS={
+  "integration":[0x000A,0x0414,0x1100,0x9064,0x8864,0x2800,0xB008,0x0C63,0x7400,0xD000],
+  "multiply 7x5":[0x0007,0x0405,0x0800,0x0C01,0x2700,0xC008,0x1800,0xA004,0xD000],
+  "fibonacci(10)":[0x0000,0x0401,0x0809,0x0C01,0x1100,0x9000,0x7100,0x8400,0x2B00,0xC00B,0xA004,0xD000],
+  "array max":[0x0403,0x940A,0x042A,0x940B,0x0411,0x940C,0x0408,0x940D,0x0419,0x940E,0x800A,0x840B,0x7800,0x2900,0xC010,0xA011,0x7100,0x840C,0x7800,0x2900,0xC016,0xA017,0x7100,0x840D,0x7800,0x2900,0xC01C,0xA01D,0x7100,0x840E,0x7800,0x2900,0xC022,0xA023,0x7100,0xD000]
 };
-function fields(w){ return {op:w>>12, rd:(w>>10)&3, rs:(w>>8)&3, imm:w&255}; }
-function disasm(w){
-  const d = OPCODES[w>>12];
-  if(!d) return "DB 0x"+w.toString(16).toUpperCase().padStart(4,"0");
-  const {rd,rs,imm} = fields(w);
-  if(d.k==="NOOP") return d.n;
-  if(d.k==="RR")   return `${d.n} R${rd}, R${rs}`;
-  if(d.k==="RI")   return `${d.n} R${rd}, ${imm}`;
-  return `${d.n} ${imm}`;
+class Cpu{
+  constructor(p){this.load(p);}
+  load(p){this.imem=p.slice();while(this.imem.length<256)this.imem.push(0);this.reset();}
+  reset(){this.pc=0;this.ir=0;this.regs=[0,0,0,0];this.z=0;this.c=0;this.ram=new Array(256).fill(0);this.state="FETCH";this.cycle=0;this.halted=false;this.aluName="-";this.aluResult=0;this.memRead=0;this.lastMem=-1;}
+  _exec(){const{op,rd,rs,imm}=fields(this.ir);const a=this.regs[rd];const b=(op===0x0)?imm:this.regs[rs];let r=a,carry=0,name="-";switch(op){case 0x0:r=b;name="PASS";break;case 0x1:{const s=a+b;r=s&255;carry=s>255?1:0;name="ADD";break;}case 0x2:{const d=a-b;r=d&255;carry=d<0?1:0;name="SUB";break;}case 0x3:r=a&b;name="AND";break;case 0x4:r=a|b;name="OR";break;case 0x5:r=a^b;name="XOR";break;case 0x6:r=(~b)&255;name="NOT";break;case 0x7:r=b;name="PASS";break;}this.aluResult=r&255;this.aluName=name;if(op>=0&&op<=7){this.z=this.aluResult===0?1:0;this.c=carry;}}
+  step(){if(this.halted)return false;switch(this.state){
+    case"FETCH":this.ir=this.imem[this.pc];this.pc=(this.pc+1)&255;this.state="DECODE";break;
+    case"DECODE":this.state="EXEC";break;
+    case"EXEC":{this._exec();const o=this.ir>>12;if(o===0xD){this.state="HALT";this.halted=true;}else if(o===8||o===9){this.state="MEM";}else{this.state="WB";}break;}
+    case"MEM":{const o=this.ir>>12,rd=(this.ir>>10)&3,imm=this.ir&255;if(o===8){this.memRead=this.ram[imm];this.lastMem=imm;this.state="WB";}else{this.ram[imm]=this.regs[rd];this.lastMem=imm;this.state="FETCH";}break;}
+    case"WB":{const o=this.ir>>12,rd=(this.ir>>10)&3,imm=this.ir&255;if((o>=0&&o<=7)||o===8){this.regs[rd]=(o===8)?this.memRead:this.aluResult;}let taken=false;if(o===0xA)taken=true;else if(o===0xB&&this.z)taken=true;else if(o===0xC&&this.c)taken=true;if(o>=0xA&&o<=0xC&&taken)this.pc=imm;this.state="FETCH";break;}
+    case"HALT":break;}this.cycle++;return !this.halted;}
+  stepInstruction(){if(this.halted)return false;const s=this.state;do{if(!this.step())break;}while(this.state!==s);return !this.halted;}
 }
 
-// ---- Example programs (hex words, as emitted by the C++ assembler) ----
-const PROGRAMS = {
-  "integration": [0x000A,0x0414,0x1100,0x9064,0x8864,0x2800,0xB008,0x0C63,0x7400,0xD000],
-  "multiply 7x5": [0x0007,0x0405,0x0800,0x0C01,0x2700,0xC008,0x1800,0xA004,0xD000],
-  "fibonacci(10)": [0x0000,0x0401,0x0809,0x0C01,0x1100,0x9000,0x7100,0x8400,0x2B00,0xC00B,0xA004,0xD000],
-  "array max": [0x0403,0x940A,0x042A,0x940B,0x0411,0x940C,0x0408,0x940D,0x0419,0x940E,
-                0x800A,0x840B,0x7800,0x2900,0xC010,0xA011,0x7100,0x840C,0x7800,0x2900,
-                0xC016,0xA017,0x7100,0x840D,0x7800,0x2900,0xC01C,0xA01D,0x7100,0x840E,
-                0x7800,0x2900,0xC022,0xA023,0x7100,0xD000]
+const NODES={
+  nextpc:{x:20,y:20,w:120,h:40,label:"Next-PC Sel",c:"blue"},
+  pc:{x:20,y:100,w:120,h:40,label:"PC",c:"blue"},
+  pcinc:{x:20,y:180,w:120,h:40,label:"PC + 1",c:"blue"},
+  imem:{x:190,y:100,w:120,h:40,label:"IMEM",c:"purple"},
+  ir:{x:350,y:100,w:120,h:40,label:"IR",c:"blue"},
+  cu:{x:520,y:20,w:220,h:60,label:"Control Unit",c:"orange"},
+  rfile:{x:350,y:190,w:120,h:40,label:"Register File",c:"blue"},
+  bmux:{x:510,y:190,w:90,h:40,label:"B-MUX",c:"green"},
+  alu:{x:640,y:190,w:100,h:40,label:"ALU",c:"green"},
+  flag:{x:640,y:270,w:100,h:40,label:"Flags",c:"blue"},
+  dmem:{x:510,y:270,w:90,h:40,label:"Data Mem",c:"purple"},
+  wbmux:{x:350,y:270,w:120,h:40,label:"WB-MUX",c:"green"}
 };
-
-// ---- CPU model (one clock step mirrors rtl/cpu.v + control_unit.v) ----
-class Cpu {
-  constructor(prog){ this.load(prog); }
-  load(prog){ this.imem = prog.slice(); while(this.imem.length<256) this.imem.push(0); this.reset(); }
-  reset(){
-    this.pc=0; this.ir=0; this.regs=[0,0,0,0]; this.z=0; this.c=0;
-    this.ram=new Array(256).fill(0); this.state="FETCH"; this.cycle=0; this.halted=false;
-    this.aluName="-"; this.aluResult=0; this.memRead=0; this.lastMem=-1;
-  }
-  _exec(){
-    const {op,rd,rs,imm} = fields(this.ir);
-    const a = this.regs[rd];
-    const b = (op===0x0) ? imm : this.regs[rs]; // bsel=1 only for LDI
-    let r=a, carry=0, name="";
-    switch(op){
-      case 0x0: r=b; name="PASS"; break;
-      case 0x1: { const s=a+b; r=s&0xFF; carry=s>255?1:0; name="ADD"; break; }
-      case 0x2: { const d=a-b; r=d&0xFF; carry=d<0?1:0; name="SUB"; break; }
-      case 0x3: r=a&b; name="AND"; break;
-      case 0x4: r=a|b; name="OR"; break;
-      case 0x5: r=a^b; name="XOR"; break;
-      case 0x6: r=(~b)&0xFF; name="NOT"; break;
-      case 0x7: r=b; name="PASS"; break;
-      default: name="-";
-    }
-    this.aluResult=r&0xFF; this.aluName=name;
-    if(op>=0x0 && op<=0x7){ this.z=(this.aluResult===0)?1:0; this.c=carry; }
-  }
-  step(){
-    if(this.halted) return false;
-    const {op,rd,rs,imm} = fields(this.ir);
-    switch(this.state){
-      case "FETCH":
-        this.ir = this.imem[this.pc];
-        this.pc = (this.pc+1)&0xFF;
-        this.state = "DECODE";
-        break;
-      case "DECODE":
-        this.state = "EXEC";
-        break;
-      case "EXEC": {
-        this._exec();
-        const o = this.ir>>12;
-        if(o===0xD){ this.state="HALT"; this.halted=true; }
-        else if(o===0x8||o===0x9){ this.state="MEM"; }
-        else { this.state="WB"; }
-        break;
-      }
-      case "MEM": {
-        const o=this.ir>>12, rd=(this.ir>>10)&3, imm=this.ir&255;
-        if(o===0x8){ this.memRead=this.ram[imm]; this.lastMem=imm; this.state="WB"; }
-        else if(o===0x9){ this.ram[imm]=this.regs[rd]; this.lastMem=imm; this.state="FETCH"; }
-        break;
-      }
-      case "WB": {
-        const o=this.ir>>12, rd=(this.ir>>10)&3, imm=this.ir&255;
-        const writes = (o>=0x0 && o<=0x7) || o===0x8;
-        if(writes){ this.regs[rd] = (o===0x8)? this.memRead : this.aluResult; }
-        let taken=false;
-        if(o===0xA) taken=true;
-        else if(o===0xB && this.z) taken=true;
-        else if(o===0xC && this.c) taken=true;
-        if((o>=0xA && o<=0xC) && taken){ this.pc=imm; }
-        this.state="FETCH";
-        break;
-      }
-      case "HALT": break;
-    }
-    this.cycle++;
-    return !this.halted;
-  }
-  stepInstruction(){
-    // advance until the state returns to FETCH (one instruction boundary) or halt
-    if(this.halted) return false;
-    const start = this.state;
-    do { if(!this.step()) break; } while(this.state!==start && !(this.state==="FETCH" && this.cycle>0));
-    return !this.halted;
-  }
-}
-
-// ---- UI wiring ----
-let cpu = new Cpu(PROGRAMS["integration"]);
-let timer = null;
-
-const $ = id => document.getElementById(id);
-const hex = (n,w=2)=> "0x"+n.toString(16).toUpperCase().padStart(w,"0");
-
-function buildProgSelect(){
-  const sel = $("prog");
-  sel.innerHTML="";
-  for(const k of Object.keys(PROGRAMS)){
-    const o=document.createElement("option"); o.value=k; o.textContent=k; sel.appendChild(o);
-  }
-  sel.value="integration";
-}
-
+const EDGES=[
+  {f:"nextpc",t:"pc",pts:[[80,60],[80,100]],lbl:"next PC"},
+  {f:"pc",t:"imem",pts:[[140,120],[190,120]],lbl:"addr"},
+  {f:"imem",t:"ir",pts:[[310,120],[350,120]],lbl:"instr"},
+  {f:"ir",t:"cu",pts:[[470,120],[495,120],[495,50],[520,50]],lbl:"fields"},
+  {f:"pc",t:"pcinc",pts:[[80,140],[80,180]],lbl:""},
+  {f:"pcinc",t:"nextpc",pts:[[20,200],[8,200],[8,40],[20,40]],lbl:""},
+  {f:"ir",t:"rfile",pts:[[410,140],[410,190]],lbl:"RD,RS"},
+  {f:"rfile",t:"bmux",pts:[[470,210],[510,210]],lbl:"B"},
+  {f:"bmux",t:"alu",pts:[[600,210],[640,210]],lbl:""},
+  {f:"rfile",t:"alu",pts:[[455,190],[455,168],[690,168],[690,190]],lbl:"A"},
+  {f:"alu",t:"flag",pts:[[690,230],[690,270]],lbl:"Z,C"},
+  {f:"alu",t:"wbmux",pts:[[660,230],[660,330],[430,330],[430,310]],lbl:"Result"},
+  {f:"dmem",t:"wbmux",pts:[[510,290],[470,290]],lbl:"Read"},
+  {f:"wbmux",t:"rfile",pts:[[390,270],[390,230]],lbl:"Write"},
+  {f:"cu",t:"nextpc",ctrl:1,pts:[[520,60],[505,60],[505,12],[80,12],[80,20]],lbl:""},
+  {f:"cu",t:"alu",ctrl:1,pts:[[700,80],[700,190]],lbl:""},
+  {f:"cu",t:"rfile",ctrl:1,pts:[[560,80],[560,150],[470,150],[470,190]],lbl:""},
+  {f:"cu",t:"dmem",ctrl:1,pts:[[720,80],[740,80],[740,290],[600,290]],lbl:""},
+  {f:"cu",t:"wbmux",ctrl:1,pts:[[540,80],[540,110],[340,110],[340,290],[350,290]],lbl:""}
+];
+const CAT={blue:["var(--blue)","var(--blue-b)"],green:["var(--green)","var(--green-b)"],orange:["var(--orange)","var(--orange-b)"],purple:["var(--purple)","var(--purple-b)"]};
 function buildDatapath(){
-  // blocks: id, x, y, w, h, label, color
-  const B=[
-    ["nextpc",10,20,90,40,"Next-PC",  "var(--blue)"],
-    ["pc",120,20,70,40,"PC",          "var(--blue)"],
-    ["imem",210,20,80,40,"IMEM",      "var(--purple)"],
-    ["ir",310,20,70,40,"IR",          "var(--blue)"],
-    ["cu",400,20,90,40,"Control",     "var(--orange)"],
-    ["pcinc",10,80,90,40,"PC+1",      "var(--blue)"],
-    ["rfile",210,80,80,40,"RegFile",  "var(--blue)"],
-    ["alumux",310,80,70,40,"B-MUX",   "var(--green)"],
-    ["alu",400,80,90,40,"ALU",        "var(--green)"],
-    ["flag",510,80,70,40,"Flags",     "var(--blue)"],
-    ["wbmux",210,150,80,40,"WB-MUX",  "var(--green)"],
-    ["dmem",400,150,90,40,"DMEM",     "var(--purple)"]
-  ];
-  const svg=$("dp"); svg.innerHTML="";
-  const NS="http://www.w3.org/2000/svg";
-  for(const [id,x,y,w,h,label,col] of B){
-    const r=document.createElementNS(NS,"rect");
-    r.setAttribute("x",x);r.setAttribute("y",y);r.setAttribute("width",w);r.setAttribute("height",h);
-    r.setAttribute("rx",6); r.setAttribute("fill",col); r.setAttribute("class","blk"); r.dataset.id=id;
-    svg.appendChild(r);
-    const t=document.createElementNS(NS,"text");
-    t.setAttribute("x",x+w/2);t.setAttribute("y",y+h/2+4);t.setAttribute("text-anchor","middle");
-    t.textContent=label; svg.appendChild(t);
+  const NS="http://www.w3.org/2000/svg",svg=document.getElementById("dp");svg.innerHTML="";
+  const defs=document.createElementNS(NS,"defs");
+  defs.innerHTML='<marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--wire)"/></marker><marker id="ahc" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#c07a3a"/></marker>';
+  svg.appendChild(defs);
+  for(const e of EDGES){
+    const p=document.createElementNS(NS,"polyline");
+    p.setAttribute("points",e.pts.map(a=>a.join(",")).join(" "));
+    p.setAttribute("class","wire"+(e.ctrl?" ctrl":""));
+    p.setAttribute("marker-end",e.ctrl?"url(#ahc)":"url(#ah)");
+    svg.appendChild(p);
+    if(e.lbl){const mid=e.pts[Math.floor(e.pts.length/2)];const t=document.createElementNS(NS,"text");t.setAttribute("x",mid[0]+3);t.setAttribute("y",mid[1]-3);t.setAttribute("class","lbl");t.textContent=e.lbl;svg.appendChild(t);}
+  }
+  for(const id in NODES){const n=NODES[id];const[f,s]=CAT[n.c];
+    const r=document.createElementNS(NS,"rect");r.setAttribute("x",n.x);r.setAttribute("y",n.y);r.setAttribute("width",n.w);r.setAttribute("height",n.h);r.setAttribute("rx",8);r.setAttribute("fill",f);r.setAttribute("stroke",s);r.setAttribute("class","node");r.dataset.id=id;svg.appendChild(r);
+    const t=document.createElementNS(NS,"text");t.setAttribute("x",n.x+n.w/2);t.setAttribute("y",n.y+n.h/2+4);t.setAttribute("text-anchor","middle");t.textContent=n.label;svg.appendChild(t);
   }
 }
+function activeBlocks(){switch(cpu.state){case"FETCH":return["pc","imem","ir","nextpc","pcinc"];case"DECODE":return["ir","cu","rfile"];case"EXEC":return["cu","rfile","bmux","alu","flag"];case"MEM":return["dmem"];case"WB":return["wbmux","rfile","alu"];case"HALT":return["cu"];default:return[];}}
 
-function activeBlocks(){
-  switch(cpu.state){
-    case "FETCH": return ["pc","imem","ir","nextpc","pcinc"];
-    case "DECODE": return ["ir","cu","rfile"];
-    case "EXEC": return ["cu","rfile","alu","alumux","flag"];
-    case "MEM": return ["dmem"];
-    case "WB": return ["wbmux","rfile","alu"];
-    case "HALT": return ["cu"];
-    default: return [];
-  }
-}
-
+let cpu=new Cpu(PROGRAMS["integration"]),timer=null;
+const $=id=>document.getElementById(id),hex=(n,w=2)=>"0x"+n.toString(16).toUpperCase().padStart(w,"0");
 function render(){
-  $("sCycle").textContent = cpu.cycle;
-  $("sState").textContent = cpu.state;
-  $("sPC").textContent = hex(cpu.pc);
-  $("sIR").textContent = hex(cpu.ir,4);
-  $("sDis").textContent = (cpu.state==="FETCH")? "-" : disasm(cpu.ir);
-  const f = fields(cpu.ir);
-  $("sFields").textContent = `op=${f.op.toString(16)} rd=${f.rd} rs=${f.rs} imm=${f.imm}`;
-  $("sAlu").textContent = (cpu.state==="EXEC"||cpu.state==="WB")? cpu.aluName : "-";
-  $("sHalt").textContent = cpu.halted ? "HALTED" : "running";
-  $("fZ").className = "flag"+(cpu.z?" set":""); $("fZ").textContent="Z="+cpu.z;
-  $("fC").className = "flag"+(cpu.c?" set":""); $("fC").textContent="C="+cpu.c;
-
-  // registers
-  const rt=$("regs"); rt.innerHTML="";
-  for(let i=0;i<4;i++){
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>R${i}</td><td>${hex(cpu.regs[i])}</td><td>${cpu.regs[i]}</td>`;
-    rt.appendChild(tr);
-  }
-
-  // datapath highlight
-  const act=new Set(activeBlocks());
-  document.querySelectorAll("#dp rect").forEach(r=>{
-    r.classList.toggle("active", act.has(r.dataset.id));
-  });
-
-  // disassembly
-  const d=$("disasm"); d.innerHTML="";
-  const n = PROGRAMS[$("prog").value].length;
-  for(let a=0;a<n;a++){
-    const row=document.createElement("div");
-    row.className="row"+(a===cpu.pc?" cur":"");
-    row.innerHTML=`<span class="addr">${a}</span><span class="mono">${hex(PROGRAMS[$("prog").value][a],4)}</span><span class="mono">${disasm(PROGRAMS[$("prog").value][a])}</span>`;
-    d.appendChild(row);
-  }
-
-  // ram
-  const rm=$("ram"); rm.innerHTML="";
-  for(let i=0;i<256;i++){
-    const c=document.createElement("div");
-    c.className="cell"+(cpu.ram[i]?" nz":"")+(i===cpu.lastMem?" hl":"");
-    c.textContent = cpu.ram[i]? cpu.ram[i].toString(16).toUpperCase() : "·";
-    c.title="RAM["+i+"]";
-    rm.appendChild(c);
-  }
+  $("sCycle").textContent=cpu.cycle;$("sState").textContent=cpu.state;$("sPC").textContent=hex(cpu.pc);$("sIR").textContent=hex(cpu.ir,4);
+  $("sDis").textContent=cpu.state==="FETCH"?"-":disasm(cpu.ir);$("sAlu").textContent=(cpu.state==="EXEC"||cpu.state==="WB")?cpu.aluName:"-";$("sHalt").textContent=cpu.halted?"HALTED":"running";
+  $("fZ").className="flag"+(cpu.z?" set":"");$("fZ").textContent="Z "+cpu.z;$("fC").className="flag"+(cpu.c?" set":"");$("fC").textContent="C "+cpu.c;
+  const rt=$("regs");rt.innerHTML="";for(let i=0;i<4;i++){const d=document.createElement("div");d.className="reg";d.innerHTML=`<span class="name">R${i}</span><span>${hex(cpu.regs[i])}</span><span class="dec">${cpu.regs[i]}</span>`;rt.appendChild(d);}
+  const act=new Set(activeBlocks());document.querySelectorAll("#dp .node").forEach(r=>r.classList.toggle("active",act.has(r.dataset.id)));
+  const d=$("disasm");d.innerHTML="";const prog=PROGRAMS[$("prog").value];for(let a=0;a<prog.length;a++){const row=document.createElement("div");row.className="row"+(a===cpu.pc?" cur":"");row.innerHTML=`<span class="a">${a}</span><span>${hex(prog[a],4)}</span><span>${disasm(prog[a])}</span>`;d.appendChild(row);}
+  const rm=$("ram");rm.innerHTML="";for(let i=0;i<256;i++){const c=document.createElement("div");c.className="cell"+(cpu.ram[i]?" nz":"")+(i===cpu.lastMem?" hl":"");c.textContent=cpu.ram[i]?cpu.ram[i].toString(16).toUpperCase():"";c.title="RAM["+i+"]";rm.appendChild(c);}
 }
-
-function stopRun(){ if(timer){clearInterval(timer);timer=null;} $("btnRun").disabled=false; $("btnPause").disabled=true; }
-function startRun(){
-  if(cpu.halted) return;
-  $("btnRun").disabled=true; $("btnPause").disabled=false;
-  timer=setInterval(()=>{ cpu.step(); render(); if(cpu.halted) stopRun(); }, 60);
-}
-
-$("btnReset").onclick=()=>{ stopRun(); cpu=new Cpu(PROGRAMS[$("prog").value]); render(); };
-$("btnStepC").onclick=()=>{ stopRun(); cpu.step(); render(); };
-$("btnStepI").onclick=()=>{ stopRun(); cpu.stepInstruction(); render(); };
-$("btnRun").onclick=()=>startRun();
-$("btnPause").onclick=()=>stopRun();
-$("prog").onchange=()=>{ stopRun(); cpu=new Cpu(PROGRAMS[$("prog").value]); render(); };
-
-buildProgSelect();
-buildDatapath();
-render();
-
-// expose for automated verification
-window.RAYAN8 = { Cpu, PROGRAMS, disasm, fields };
+function stop(){if(timer){clearInterval(timer);timer=null;}$("btnRun").disabled=false;$("btnPause").disabled=true;}
+function run(){if(cpu.halted)return;$("btnRun").disabled=true;$("btnPause").disabled=false;timer=setInterval(()=>{cpu.step();render();if(cpu.halted)stop();},55);}
+$("btnReset").onclick=()=>{stop();cpu=new Cpu(PROGRAMS[$("prog").value]);render();};
+$("btnStepC").onclick=()=>{stop();cpu.step();render();};
+$("btnStepI").onclick=()=>{stop();cpu.stepInstruction();render();};
+$("btnRun").onclick=run;$("btnPause").onclick=stop;
+$("prog").onchange=()=>{stop();cpu=new Cpu(PROGRAMS[$("prog").value]);render();};
+(function(){const s=$("prog");for(const k of Object.keys(PROGRAMS)){const o=document.createElement("option");o.value=k;o.textContent=k;s.appendChild(o);}s.value="integration";})();
+buildDatapath();render();
+window.RAYAN8={Cpu,PROGRAMS,disasm,fields};
 </script>
 </body>
 </html>
