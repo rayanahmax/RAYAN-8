@@ -42,6 +42,7 @@ module cpu_tb;
             @(posedge clk);
 
         #1;
+        $display("CYCLES = %0d", i);
         check8(dut.halt === 1'b1 ? 8'd1 : 8'd0, 8'd1, "CPU reached HALT");
         check8(dut.u_rf.regs[0], 8'd42, "R0 = 42");
         check8(dut.u_rf.regs[1], 8'd22, "R1 = 22");

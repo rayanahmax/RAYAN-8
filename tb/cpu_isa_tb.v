@@ -55,6 +55,7 @@ module cpu_isa_tb;
                dut_jmp.halt && dut_jz.halt && dut_jc.halt && dut_jznt.halt); i = i + 1)
             @(posedge clk);
         #1;
+        $display("CYCLES = %0d (until all halted)", i);
 
         // Arithmetic: ADD then SUB
         checkhalt(dut_arith.halt, "arith halted");

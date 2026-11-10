@@ -38,6 +38,7 @@ module cpu_integration_tb;
         for (i = 0; i < 200 && dut.halt !== 1'b1; i = i + 1)
             @(posedge clk);
         #1;
+        $display("CYCLES = %0d", i);
 
         check8(dut.halt === 1'b1 ? 8'd1 : 8'd0, 8'd1, "halted");
         check8(dut.u_rf.regs[0], 8'd30,  "R0 = 30");
