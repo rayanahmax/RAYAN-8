@@ -57,6 +57,10 @@ module alu_tb;
         op = 3'd5; b = 8'h0F; #1; check(8'hF0, 1'b0, 1'b0, "NOT 0F");
         b = 8'hFF; #1; check(8'h00, 1'b1, 1'b0, "NOT FF zero");
 
+        // PASS (op = 6), used by LDI and MOV
+        op = 3'd6; a = 8'd255; b = 8'd50; #1; check(8'd50, 1'b0, 1'b0, "PASS b=50");
+        b = 8'd0;  #1; check(8'd0, 1'b1, 1'b0, "PASS b=0 zero");
+
         if (errors == 0)
             $display("ALL %0d ALU TESTS PASSED", checks);
         else

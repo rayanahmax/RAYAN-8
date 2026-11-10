@@ -15,7 +15,8 @@ module alu (
                OP_AND = 3'd2,
                OP_OR  = 3'd3,
                OP_XOR = 3'd4,
-               OP_NOT = 3'd5;
+               OP_NOT = 3'd5,
+               OP_PASS = 3'd6;
 
     wire [8:0] sum  = {1'b0, a} + {1'b0, b};
     wire [8:0] diff = {1'b0, a} - {1'b0, b};
@@ -33,6 +34,7 @@ module alu (
             OP_OR:  r = a | b;
             OP_XOR: r = a ^ b;
             OP_NOT: r = ~b;
+            OP_PASS: r = b;
             default: begin r = 8'd0; c = 1'b0; end
         endcase
     end
