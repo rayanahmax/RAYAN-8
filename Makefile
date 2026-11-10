@@ -10,7 +10,7 @@ RTL := $(wildcard rtl/*.v)
 TB  := $(wildcard tb/*.v)
 ASM_SRC := $(wildcard asm/*.cpp)
 
-.PHONY: all sim asm clean help
+.PHONY: all sim asm asmgen clean help
 
 all: sim asm
 
@@ -35,10 +35,16 @@ sim: build $(RTL)
 asm: build $(ASM_SRC)
 	$(CXX) $(CXXFLAGS) -o build/assembler $(ASM_SRC)
 
+# Regenerate the integration program hex from its assembly source.
+# This is the software-to-hardware step: assembler output feeds the CPU ROM.
+asmgen: asm
+	build/assembler tests/programs/integration.asm tests/programs/integration.hex
+
 clean:
 	rm -rf build/*
 
 help:
-	@echo "make sim   - compile rtl/*.v + tb/*.v and run simulation"
-	@echo "make asm   - build the C++ assembler from asm/*.cpp"
-	@echo "make clean - remove build artifacts"
+	@echo "make sim    - compile rtl/*.v + tb/*.v and run all testbenches"
+	@echo "make asm    - build the C++ assembler from asm/*.cpp"
+	@echo "make asmgen - assemble integration.asm into integration.hex"
+	@echo "make clean  - remove build artifacts"
