@@ -6,6 +6,8 @@ build/
 *.out
 *.hex
 *.o
+# but keep hand-written test fixtures
+!tests/programs/*.hex
 
 # Editor / OS noise
 .vscode/

@@ -30,7 +30,7 @@ module regfile_tb;
         end
     endtask
 
-    task check8(input [7:0] got, input [7:0] exp, input [255:0] name);
+    task check8(input [7:0] got, input [7:0] exp, input [511:0] name);
         begin
             checks = checks + 1;
             if (got !== exp) begin

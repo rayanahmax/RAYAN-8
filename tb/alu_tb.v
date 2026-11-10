@@ -15,7 +15,7 @@ module alu_tb;
         .result(result), .zero(zero), .carry(carry)
     );
 
-    task check(input [7:0] exp_r, input exp_z, input exp_c, input [255:0] name);
+    task check(input [7:0] exp_r, input exp_z, input exp_c, input [511:0] name);
         begin
             checks = checks + 1;
             if (result !== exp_r || zero !== exp_z || carry !== exp_c) begin
