@@ -9,7 +9,7 @@ CXXFLAGS ?= -std=c++17 -Wall -Wextra
 RTL := $(wildcard rtl/*.v)
 TB  := $(wildcard tb/*.v)
 ASM_SRC := $(wildcard asm/*.cpp)
-ASM_PROGS = integration mult fib
+ASM_PROGS = integration mult fib arraymax
 
 .PHONY: all sim asm asmgen clean help
 
