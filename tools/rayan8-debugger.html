@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAYAN-8 CPU Debugger</title>
+<style>
+  :root { --bg:#f7f8fa; --panel:#fff; --ink:#1c1f24; --muted:#6b7280; --line:#d7dbe0;
+          --blue:#dae8fc; --green:#d5e8d4; --orange:#ffe6cc; --purple:#e1d5e7; --accent:#2563eb; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+         background:var(--bg); color:var(--ink); font-size:14px; }
+  header { padding:14px 20px; border-bottom:1px solid var(--line); background:var(--panel); }
+  header h1 { margin:0; font-size:18px; }
+  header p { margin:2px 0 0; color:var(--muted); font-size:13px; }
+  .wrap { padding:16px; display:grid; gap:16px; grid-template-columns: 320px 1fr; }
+  .col { display:grid; gap:16px; align-content:start; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .card h2 { margin:0 0 8px; font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  .controls { display:flex; flex-wrap:wrap; gap:6px; }
+  button, select { font:inherit; padding:6px 10px; border:1px solid var(--line); border-radius:7px;
+                   background:#fff; cursor:pointer; }
+  button:hover { background:#eef2ff; }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button:disabled { opacity:.45; cursor:default; }
+  table { width:100%; border-collapse:collapse; }
+  td { padding:3px 6px; font-variant-numeric: tabular-nums; }
+  .kv td:first-child { color:var(--muted); }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .regs td, .flags td { font-family: ui-monospace, monospace; }
+  .flag { display:inline-block; min-width:26px; text-align:center; padding:2px 6px; border-radius:6px;
+          border:1px solid var(--line); margin-right:6px; }
+  .flag.set { background:var(--green); border-color:#82b366; font-weight:700; }
+  .disasm { max-height:340px; overflow:auto; }
+  .disasm .row { display:grid; grid-template-columns: 46px 60px 1fr; padding:2px 6px; border-radius:5px; }
+  .disasm .row.cur { background:#fff3cd; outline:1px solid #e0b400; }
+  .disasm .addr { color:var(--muted); }
+  .ram { display:grid; grid-template-columns: repeat(16, 1fr); gap:2px; font-family:ui-monospace, monospace; }
+  .ram .cell { text-align:center; padding:2px 0; border:1px solid var(--line); border-radius:3px; font-size:11px; }
+  .ram .cell.nz { background:#eef2ff; }
+  .ram .cell.hl { background:#ffe08a; outline:1px solid #e0b400; }
+  .state-badge { padding:2px 8px; border-radius:6px; background:var(--orange); font-weight:700; }
+  svg .blk { stroke:#333; stroke-width:1.5; }
+  svg .active { stroke:var(--accent); stroke-width:3; }
+  svg text { font-family: system-ui, sans-serif; font-size:11px; }
+  .legend { color:var(--muted); font-size:12px; margin-top:6px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>RAYAN-8 CPU Debugger</h1>
+  <p>Interactive multi-cycle datapath simulator. The JavaScript core mirrors rtl/cpu.v exactly.</p>
+</header>
+<div class="wrap">
+  <div class="col">
+    <div class="card">
+      <h2>Program</h2>
+      <div class="controls" style="margin-bottom:8px">
+        <select id="prog"></select>
+      </div>
+      <div class="controls">
+        <button id="btnReset">Reset</button>
+        <button id="btnStepC">Step cycle</button>
+        <button id="btnStepI">Step instr</button>
+        <button id="btnRun" class="primary">Run</button>
+        <button id="btnPause" disabled>Pause</button>
+      </div>
+      <div class="legend">Step cycle = one clock (shows FSM states). Step instr = run until next FETCH.</div>
+    </div>
+    <div class="card">
+      <h2>CPU state</h2>
+      <table class="kv">
+        <tr><td>Cycle</td><td id="sCycle" class="mono">0</td></tr>
+        <tr><td>FSM state</td><td><span id="sState" class="state-badge">FETCH</span></td></tr>
+        <tr><td>PC (next fetch)</td><td id="sPC" class="mono">0x00</td></tr>
+        <tr><td>IR</td><td id="sIR" class="mono">0x0000</td></tr>
+        <tr><td>Decoded</td><td id="sDis" class="mono">-</td></tr>
+        <tr><td>Fields</td><td id="sFields" class="mono">-</td></tr>
+        <tr><td>ALU op</td><td id="sAlu" class="mono">-</td></tr>
+        <tr><td>Status</td><td id="sHalt" class="mono">running</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Flags</h2>
+      <span class="flag" id="fZ">Z</span><span class="flag" id="fC">C</span>
+    </div>
+    <div class="card">
+      <h2>Registers</h2>
+      <table class="regs"><tbody id="regs"></tbody></table>
+    </div>
+  </div>
+  <div class="col">
+    <div class="card">
+      <h2>Datapath</h2>
+      <svg id="dp" viewBox="0 0 640 210" width="100%" height="210"></svg>
+    </div>
+    <div class="card">
+      <h2>Disassembly</h2>
+      <div class="disasm" id="disasm"></div>
+    </div>
+    <div class="card">
+      <h2>Data memory (RAM[0..255])</h2>
+      <div class="ram" id="ram"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+// ---- ISA table (matches rtl/control_unit.v and asm/assembler.cpp) ----
+const OPCODES = {
+  0x0:{n:"LDI",k:"RI"}, 0x1:{n:"ADD",k:"RR"}, 0x2:{n:"SUB",k:"RR"}, 0x3:{n:"AND",k:"RR"},
+  0x4:{n:"OR",k:"RR"}, 0x5:{n:"XOR",k:"RR"}, 0x6:{n:"NOT",k:"RR"}, 0x7:{n:"MOV",k:"RR"},
+  0x8:{n:"LOAD",k:"RI"}, 0x9:{n:"STORE",k:"RI"}, 0xA:{n:"JMP",k:"ADDR"}, 0xB:{n:"JZ",k:"ADDR"},
+  0xC:{n:"JC",k:"ADDR"}, 0xD:{n:"HALT",k:"NOOP"}
+};
+function fields(w){ return {op:w>>12, rd:(w>>10)&3, rs:(w>>8)&3, imm:w&255}; }
+function disasm(w){
+  const d = OPCODES[w>>12];
+  if(!d) return "DB 0x"+w.toString(16).toUpperCase().padStart(4,"0");
+  const {rd,rs,imm} = fields(w);
+  if(d.k==="NOOP") return d.n;
+  if(d.k==="RR")   return `${d.n} R${rd}, R${rs}`;
+  if(d.k==="RI")   return `${d.n} R${rd}, ${imm}`;
+  return `${d.n} ${imm}`;
+}
+
+// ---- Example programs (hex words, as emitted by the C++ assembler) ----
+const PROGRAMS = {
+  "integration": [0x000A,0x0414,0x1100,0x9064,0x8864,0x2800,0xB008,0x0C63,0x7400,0xD000],
+  "multiply 7x5": [0x0007,0x0405,0x0800,0x0C01,0x2700,0xC008,0x1800,0xA004,0xD000],
+  "fibonacci(10)": [0x0000,0x0401,0x0809,0x0C01,0x1100,0x9000,0x7100,0x8400,0x2B00,0xC00B,0xA004,0xD000],
+  "array max": [0x0403,0x940A,0x042A,0x940B,0x0411,0x940C,0x0408,0x940D,0x0419,0x940E,
+                0x800A,0x840B,0x7800,0x2900,0xC010,0xA011,0x7100,0x840C,0x7800,0x2900,
+                0xC016,0xA017,0x7100,0x840D,0x7800,0x2900,0xC01C,0xA01D,0x7100,0x840E,
+                0x7800,0x2900,0xC022,0xA023,0x7100,0xD000]
+};
+
+// ---- CPU model (one clock step mirrors rtl/cpu.v + control_unit.v) ----
+class Cpu {
+  constructor(prog){ this.load(prog); }
+  load(prog){ this.imem = prog.slice(); while(this.imem.length<256) this.imem.push(0); this.reset(); }
+  reset(){
+    this.pc=0; this.ir=0; this.regs=[0,0,0,0]; this.z=0; this.c=0;
+    this.ram=new Array(256).fill(0); this.state="FETCH"; this.cycle=0; this.halted=false;
+    this.aluName="-"; this.aluResult=0; this.memRead=0; this.lastMem=-1;
+  }
+  _exec(){
+    const {op,rd,rs,imm} = fields(this.ir);
+    const a = this.regs[rd];
+    const b = (op===0x0) ? imm : this.regs[rs]; // bsel=1 only for LDI
+    let r=a, carry=0, name="";
+    switch(op){
+      case 0x0: r=b; name="PASS"; break;
+      case 0x1: { const s=a+b; r=s&0xFF; carry=s>255?1:0; name="ADD"; break; }
+      case 0x2: { const d=a-b; r=d&0xFF; carry=d<0?1:0; name="SUB"; break; }
+      case 0x3: r=a&b; name="AND"; break;
+      case 0x4: r=a|b; name="OR"; break;
+      case 0x5: r=a^b; name="XOR"; break;
+      case 0x6: r=(~b)&0xFF; name="NOT"; break;
+      case 0x7: r=b; name="PASS"; break;
+      default: name="-";
+    }
+    this.aluResult=r&0xFF; this.aluName=name;
+    if(op>=0x0 && op<=0x7){ this.z=(this.aluResult===0)?1:0; this.c=carry; }
+  }
+  step(){
+    if(this.halted) return false;
+    const {op,rd,rs,imm} = fields(this.ir);
+    switch(this.state){
+      case "FETCH":
+        this.ir = this.imem[this.pc];
+        this.pc = (this.pc+1)&0xFF;
+        this.state = "DECODE";
+        break;
+      case "DECODE":
+        this.state = "EXEC";
+        break;
+      case "EXEC": {
+        this._exec();
+        const o = this.ir>>12;
+        if(o===0xD){ this.state="HALT"; this.halted=true; }
+        else if(o===0x8||o===0x9){ this.state="MEM"; }
+        else { this.state="WB"; }
+        break;
+      }
+      case "MEM": {
+        const o=this.ir>>12, rd=(this.ir>>10)&3, imm=this.ir&255;
+        if(o===0x8){ this.memRead=this.ram[imm]; this.lastMem=imm; this.state="WB"; }
+        else if(o===0x9){ this.ram[imm]=this.regs[rd]; this.lastMem=imm; this.state="FETCH"; }
+        break;
+      }
+      case "WB": {
+        const o=this.ir>>12, rd=(this.ir>>10)&3, imm=this.ir&255;
+        const writes = (o>=0x0 && o<=0x7) || o===0x8;
+        if(writes){ this.regs[rd] = (o===0x8)? this.memRead : this.aluResult; }
+        let taken=false;
+        if(o===0xA) taken=true;
+        else if(o===0xB && this.z) taken=true;
+        else if(o===0xC && this.c) taken=true;
+        if((o>=0xA && o<=0xC) && taken){ this.pc=imm; }
+        this.state="FETCH";
+        break;
+      }
+      case "HALT": break;
+    }
+    this.cycle++;
+    return !this.halted;
+  }
+  stepInstruction(){
+    // advance until the state returns to FETCH (one instruction boundary) or halt
+    if(this.halted) return false;
+    const start = this.state;
+    do { if(!this.step()) break; } while(this.state!==start && !(this.state==="FETCH" && this.cycle>0));
+    return !this.halted;
+  }
+}
+
+// ---- UI wiring ----
+let cpu = new Cpu(PROGRAMS["integration"]);
+let timer = null;
+
+const $ = id => document.getElementById(id);
+const hex = (n,w=2)=> "0x"+n.toString(16).toUpperCase().padStart(w,"0");
+
+function buildProgSelect(){
+  const sel = $("prog");
+  sel.innerHTML="";
+  for(const k of Object.keys(PROGRAMS)){
+    const o=document.createElement("option"); o.value=k; o.textContent=k; sel.appendChild(o);
+  }
+  sel.value="integration";
+}
+
+function buildDatapath(){
+  // blocks: id, x, y, w, h, label, color
+  const B=[
+    ["nextpc",10,20,90,40,"Next-PC",  "var(--blue)"],
+    ["pc",120,20,70,40,"PC",          "var(--blue)"],
+    ["imem",210,20,80,40,"IMEM",      "var(--purple)"],
+    ["ir",310,20,70,40,"IR",          "var(--blue)"],
+    ["cu",400,20,90,40,"Control",     "var(--orange)"],
+    ["pcinc",10,80,90,40,"PC+1",      "var(--blue)"],
+    ["rfile",210,80,80,40,"RegFile",  "var(--blue)"],
+    ["alumux",310,80,70,40,"B-MUX",   "var(--green)"],
+    ["alu",400,80,90,40,"ALU",        "var(--green)"],
+    ["flag",510,80,70,40,"Flags",     "var(--blue)"],
+    ["wbmux",210,150,80,40,"WB-MUX",  "var(--green)"],
+    ["dmem",400,150,90,40,"DMEM",     "var(--purple)"]
+  ];
+  const svg=$("dp"); svg.innerHTML="";
+  const NS="http://www.w3.org/2000/svg";
+  for(const [id,x,y,w,h,label,col] of B){
+    const r=document.createElementNS(NS,"rect");
+    r.setAttribute("x",x);r.setAttribute("y",y);r.setAttribute("width",w);r.setAttribute("height",h);
+    r.setAttribute("rx",6); r.setAttribute("fill",col); r.setAttribute("class","blk"); r.dataset.id=id;
+    svg.appendChild(r);
+    const t=document.createElementNS(NS,"text");
+    t.setAttribute("x",x+w/2);t.setAttribute("y",y+h/2+4);t.setAttribute("text-anchor","middle");
+    t.textContent=label; svg.appendChild(t);
+  }
+}
+
+function activeBlocks(){
+  switch(cpu.state){
+    case "FETCH": return ["pc","imem","ir","nextpc","pcinc"];
+    case "DECODE": return ["ir","cu","rfile"];
+    case "EXEC": return ["cu","rfile","alu","alumux","flag"];
+    case "MEM": return ["dmem"];
+    case "WB": return ["wbmux","rfile","alu"];
+    case "HALT": return ["cu"];
+    default: return [];
+  }
+}
+
+function render(){
+  $("sCycle").textContent = cpu.cycle;
+  $("sState").textContent = cpu.state;
+  $("sPC").textContent = hex(cpu.pc);
+  $("sIR").textContent = hex(cpu.ir,4);
+  $("sDis").textContent = (cpu.state==="FETCH")? "-" : disasm(cpu.ir);
+  const f = fields(cpu.ir);
+  $("sFields").textContent = `op=${f.op.toString(16)} rd=${f.rd} rs=${f.rs} imm=${f.imm}`;
+  $("sAlu").textContent = (cpu.state==="EXEC"||cpu.state==="WB")? cpu.aluName : "-";
+  $("sHalt").textContent = cpu.halted ? "HALTED" : "running";
+  $("fZ").className = "flag"+(cpu.z?" set":""); $("fZ").textContent="Z="+cpu.z;
+  $("fC").className = "flag"+(cpu.c?" set":""); $("fC").textContent="C="+cpu.c;
+
+  // registers
+  const rt=$("regs"); rt.innerHTML="";
+  for(let i=0;i<4;i++){
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>R${i}</td><td>${hex(cpu.regs[i])}</td><td>${cpu.regs[i]}</td>`;
+    rt.appendChild(tr);
+  }
+
+  // datapath highlight
+  const act=new Set(activeBlocks());
+  document.querySelectorAll("#dp rect").forEach(r=>{
+    r.classList.toggle("active", act.has(r.dataset.id));
+  });
+
+  // disassembly
+  const d=$("disasm"); d.innerHTML="";
+  const n = PROGRAMS[$("prog").value].length;
+  for(let a=0;a<n;a++){
+    const row=document.createElement("div");
+    row.className="row"+(a===cpu.pc?" cur":"");
+    row.innerHTML=`<span class="addr">${a}</span><span class="mono">${hex(PROGRAMS[$("prog").value][a],4)}</span><span class="mono">${disasm(PROGRAMS[$("prog").value][a])}</span>`;
+    d.appendChild(row);
+  }
+
+  // ram
+  const rm=$("ram"); rm.innerHTML="";
+  for(let i=0;i<256;i++){
+    const c=document.createElement("div");
+    c.className="cell"+(cpu.ram[i]?" nz":"")+(i===cpu.lastMem?" hl":"");
+    c.textContent = cpu.ram[i]? cpu.ram[i].toString(16).toUpperCase() : "·";
+    c.title="RAM["+i+"]";
+    rm.appendChild(c);
+  }
+}
+
+function stopRun(){ if(timer){clearInterval(timer);timer=null;} $("btnRun").disabled=false; $("btnPause").disabled=true; }
+function startRun(){
+  if(cpu.halted) return;
+  $("btnRun").disabled=true; $("btnPause").disabled=false;
+  timer=setInterval(()=>{ cpu.step(); render(); if(cpu.halted) stopRun(); }, 60);
+}
+
+$("btnReset").onclick=()=>{ stopRun(); cpu=new Cpu(PROGRAMS[$("prog").value]); render(); };
+$("btnStepC").onclick=()=>{ stopRun(); cpu.step(); render(); };
+$("btnStepI").onclick=()=>{ stopRun(); cpu.stepInstruction(); render(); };
+$("btnRun").onclick=()=>startRun();
+$("btnPause").onclick=()=>stopRun();
+$("prog").onchange=()=>{ stopRun(); cpu=new Cpu(PROGRAMS[$("prog").value]); render(); };
+
+buildProgSelect();
+buildDatapath();
+render();
+
+// expose for automated verification
+window.RAYAN8 = { Cpu, PROGRAMS, disasm, fields };
+</script>
+</body>
+</html>
