@@ -9,6 +9,7 @@ CXXFLAGS ?= -std=c++17 -Wall -Wextra
 RTL := $(wildcard rtl/*.v)
 TB  := $(wildcard tb/*.v)
 ASM_SRC := $(wildcard asm/*.cpp)
+ASM_PROGS = integration mult
 
 .PHONY: all sim asm asmgen clean help
 
@@ -38,7 +39,9 @@ asm: build $(ASM_SRC)
 # Regenerate the integration program hex from its assembly source.
 # This is the software-to-hardware step: assembler output feeds the CPU ROM.
 asmgen: asm
-	build/assembler tests/programs/integration.asm tests/programs/integration.hex
+	@for p in $(ASM_PROGS); do \
+		build/assembler tests/programs/$$p.asm tests/programs/$$p.hex; \
+	done
 
 clean:
 	rm -rf build/*
